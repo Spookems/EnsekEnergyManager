@@ -1,4 +1,4 @@
-using EnsekEnergyManager.Infrastructure.Context;
+using EnsekEnergyManager.Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-builder.Services.AddDbContext<AccountContext>(options =>
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     // 11:30 https://www.youtube.com/watch?v=ZX12X-ALwGA
     options.UseSqlServer("Data Source=Main-01\\ENTEKSERVER;Initial Catalog=ENSEKDB;Integrated Security=True;Trust Server Certificate=True");

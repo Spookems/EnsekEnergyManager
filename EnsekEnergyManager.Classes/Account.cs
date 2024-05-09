@@ -2,8 +2,15 @@
 
 namespace EnsekEnergyManager.Classes
 {
-    public class Account
+    public class Account /*: AuditableEntity, IAggregateRoot*/
     {
+        public Account(int accountId, string firstName, string lastName)
+        {
+            AccountId = accountId;
+            FirstName = firstName;
+            LastName = lastName;
+        }
+
         [Key]
         public int AccountId { get; set; }
 
