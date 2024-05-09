@@ -10,7 +10,7 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<AccountContext>(options =>
 {
     // 11:30 https://www.youtube.com/watch?v=ZX12X-ALwGA
-    options.UseSqlServer()
+    options.UseSqlServer("Data Source=Main-01\\ENTEKSERVER;Initial Catalog=ENSEKDB;Integrated Security=True;Trust Server Certificate=True");
 });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

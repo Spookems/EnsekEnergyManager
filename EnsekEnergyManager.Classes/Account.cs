@@ -1,12 +1,16 @@
-﻿namespace EnsekEnergyManager.Classes
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace EnsekEnergyManager.Classes
 {
     public class Account
     {
-        public Guid Id { get; set; }
-        public string Name { get; set; } = string.Empty;
+        [Key]
+        public int AccountId { get; set; }
 
-        public string? Description { get; set; }
+        [StringLength(20)]
+        public string FirstName { get; set; } = string.Empty;
 
-        public string? Email { get; set; }
+        [StringLength(20)]
+        public string LastName { get; set; } = string.Empty;
     }
 }

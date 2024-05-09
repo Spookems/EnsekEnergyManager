@@ -12,6 +12,7 @@ namespace EnsekEnergyManager.Infrastructure.Context
     public class AccountContext : DbContext
     {
         public DbSet<Account> Accounts { get; set; }
+        public DbSet<MeterReading> MeterReadings { get; set; }
 
         public AccountContext(DbContextOptions options) : base(options)
         {
