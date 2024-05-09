@@ -1,0 +1,6 @@
+@EnsekEnergyManager_HostAddress = http://localhost:5109
+
+GET {{EnsekEnergyManager_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
