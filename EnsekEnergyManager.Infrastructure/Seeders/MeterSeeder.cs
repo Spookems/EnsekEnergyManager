@@ -36,26 +36,25 @@ namespace EnsekEnergyManager.Infrastructure.Seeders
             string? authorPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
             string authorsData = await File.ReadAllTextAsync(authorPath + "/Seeders/authors.json", cancellationToken); // needs changing for csv
-            List<MeterReadingObject> authors = _serializerService.Deserialize<List<MeterReadingObject>>(authorsData);
 
-            if (authors != null)
-            {
-                Microsoft.EntityFrameworkCore.DbSet<MeterReading> existingType = _db.MeterReadings;
-                //IEnumerable<MeterReading> missing = authors.Where(lt => !existingType.Any(l => l.MeterReadValue != null && l.MeterReadValue == lt.MeterReadValue));
+            //if (authors != null)
+            //{
+            //    Microsoft.EntityFrameworkCore.DbSet<MeterReading> existingType = _db.MeterReadings;
+            //    //IEnumerable<MeterReading> missing = authors.Where(lt => !existingType.Any(l => l.MeterReadValue != null && l.MeterReadValue == lt.MeterReadValue));
 
-                //if (missing.Any())
-                //{
-                    _logger.LogInformation("Started to Seed Authors.");
-                    foreach (MeterReadingObject author in authors)
-                    {
-                        MeterReading newAuthor = new MeterReading(author.MeterReadValue, null, null);
-                        await _db.MeterReadings.AddAsync(newAuthor, cancellationToken);
-                    }
+            //    //if (missing.Any())
+            //    //{
+            //        _logger.LogInformation("Started to Seed Authors.");
+            //        foreach (MeterReadingObject author in authors)
+            //        {
+            //            MeterReading newAuthor = new MeterReading(author.MeterReadValue, null, null);
+            //            await _db.MeterReadings.AddAsync(newAuthor, cancellationToken);
+            //        }
 
-                    await _db.SaveChangesAsync(cancellationToken);
-                    _logger.LogInformation("Seeded Authors.");
-                //}
-            }
+            //        await _db.SaveChangesAsync(cancellationToken);
+            //        _logger.LogInformation("Seeded Authors.");
+            //    //}
+            //}
         }
     }
 }

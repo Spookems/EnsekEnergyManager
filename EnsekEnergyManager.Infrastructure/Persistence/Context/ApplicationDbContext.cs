@@ -12,6 +12,10 @@ namespace EnsekEnergyManager.Infrastructure.Persistence.Context
 {
     public class ApplicationDbContext : DbContext
     {
+        public ApplicationDbContext()
+        {
+
+        }
         public ApplicationDbContext(DbContextOptions options) : base(options)
         {
         }
@@ -23,7 +27,14 @@ namespace EnsekEnergyManager.Infrastructure.Persistence.Context
         {
             base.OnModelCreating(modelBuilder);
 
-            // modelBuilder.HasDefaultSchema(SchemaNames.Catalog);
+             // modelBuilder.HasDefaultSchema(SchemaNames.Catalog);
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            base.OnConfiguring(optionsBuilder);
+
+            optionsBuilder.UseSqlServer("Data Source=Main-01\\ENTEKSERVER;Initial Catalog=ENSEKDB;Integrated Security=True;Encrypt=True;Trust Server Certificate=True");
         }
     }
 }

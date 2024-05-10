@@ -1,6 +1,6 @@
 ﻿namespace Infrastructure.Persistence.Init
 {
-    internal interface IDatabaseInitializer
+    public interface IDatabaseInitializer
     {
         Task InitializeDatabasesAsync(CancellationToken cancellationToken);
     }

@@ -2,7 +2,7 @@
 
 namespace EnsekEnergyManager.Infrastructure.Persistence.Init
 {
-    internal class CustomSeederRunner
+    public class CustomSeederRunner
     {
         private readonly ICustomSeeder[] _seeders;
 

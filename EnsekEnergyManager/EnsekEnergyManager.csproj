@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\EnsekEnergyManager.Classes\EnsekEnergyManager.Classes.csproj" />
     <ProjectReference Include="..\EnsekEnergyManager.Infrastructure\EnsekEnergyManager.Infrastructure.csproj" />
   </ItemGroup>
 

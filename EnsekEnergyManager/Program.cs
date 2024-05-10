@@ -1,3 +1,4 @@
+using EnsekEnergyManager.Infrastructure;
 using EnsekEnergyManager.Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,12 +10,15 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    // 11:30 https://www.youtube.com/watch?v=ZX12X-ALwGA
-    options.UseSqlServer("Data Source=Main-01\\ENTEKSERVER;Initial Catalog=ENSEKDB;Integrated Security=True;Trust Server Certificate=True");
+    options.UseSqlServer("Data Source=Main-01\\ENTEKSERVER;Initial Catalog=ENSEKDB;Integrated Security=True;Encrypt=True;Trust Server Certificate=True");
 });
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddPersistence(builder.Configuration);
+builder.Services.AddTransient<IDatabaseConfig, DatabaseConfig>();
+
 
 var app = builder.Build();
 

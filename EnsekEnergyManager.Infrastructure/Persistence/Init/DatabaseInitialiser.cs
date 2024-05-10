@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace EnsekEnergyManager.Infrastructure.Persistence.Init
 {
-    internal class DatabaseInitialiser : IDatabaseInitializer
+    public class DatabaseInitialiser : IDatabaseInitializer
     {
         private readonly DatabaseSettings _dbSettings;
         private readonly IServiceProvider _serviceProvider;
