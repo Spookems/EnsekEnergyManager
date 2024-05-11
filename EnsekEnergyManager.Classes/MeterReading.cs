@@ -8,15 +8,15 @@ namespace EnsekEnergyManager.Classes
         [Required]
         [Key]
         public Guid Id { get; set; }
-
         [Required]
         [ForeignKey("AccountId")]
-        public Account? Account { get; set; }
-
+        public int AccountId { get; set; }
         [Required]
         public DateTime? MeterReadingDateTime { get; set; }
 
         [StringLength(10)]
         public string? MeterReadValue { get; set; } = string.Empty;
+
+        public virtual Account? Account { get; set; }
     }
 }

@@ -41,10 +41,8 @@ namespace EnsekEnergyManager.Infrastructure.Seeders
         {
             CsvMapperHelper csvMappingHelper = new CsvMapperHelper(_logger);
 
-            string workingDirectory = Environment.CurrentDirectory;
-            // C:\Users\Dan\source\repos\Spookems\EnsekEnergyManager\EnsekEnergyManager.Infrastructure\Seeders\Csv\Test_Accounts.xlsx
-            List<AccountObject> x = await GetMoviesFromCsvAsync($"C:/Users/Dan/source/repos/Spookems/EnsekEnergyManager/EnsekEnergyManager.Infrastructure/Seeders/Csv/Test_Accounts.csv", cancellationToken);
-            return x;
+            List<AccountObject> accounts = await GetMoviesFromCsvAsync($"C:/Users/Dan/source/repos/Spookems/EnsekEnergyManager/EnsekEnergyManager.Infrastructure/Seeders/Csv/Test_Accounts.csv", cancellationToken);
+            return accounts;
         }
 
         static List<AccountObject> ReadCsv(string filePath)
@@ -123,21 +121,19 @@ namespace EnsekEnergyManager.Infrastructure.Seeders
                 _logger.LogWarning("No movies found to process.");
                 return;
             }
-             SeedAccountsAsync(movies, cancellationToken);
+
+            await SeedAccountsAsync(movies, cancellationToken);
         }
         private async Task SeedAccountsAsync(IEnumerable<AccountObject> movies, CancellationToken cancellationToken)
         {
             ApplicationDbContext _db = new ApplicationDbContext();
 
-            _db.Database.CanConnectAsync(cancellationToken);
-            var x = await _db.Accounts.Where(x => x.FirstName == "Test").FirstOrDefaultAsync();
-
-                HashSet<int> existingTitles = _db.Accounts.Where(x => x.AccountId != null).Select(x => x.AccountId).ToHashSet();
+            HashSet<int> existingTitles = _db.Accounts.Where(x => x.AccountId != null).Select(x => x.AccountId).ToHashSet();
             IEnumerable<AccountObject> missingMovies = movies.Where(m => !existingTitles.Contains(m.AccountId));
 
             if (missingMovies.Any())
             {
-                List<Account> missingAccountsToUpdate = new List<Account>();
+                List<Account> missingAccountsToUpdate = [];
 
                 _logger.LogInformation("Started to Seed movies.");
                 foreach (AccountObject AccountObj in missingMovies)

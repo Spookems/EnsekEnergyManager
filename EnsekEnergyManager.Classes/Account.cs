@@ -6,7 +6,7 @@ namespace EnsekEnergyManager.Classes
     public class Account /*: AuditableEntity, IAggregateRoot*/
     {
         [Key]
-        public int AccountId { get; private set; }
+        public int AccountId { get; set; }
 
         [StringLength(20)]
         public string? FirstName { get; set; } = string.Empty;

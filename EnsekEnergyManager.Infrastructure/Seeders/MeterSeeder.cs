@@ -9,18 +9,23 @@ using System.Threading.Tasks;
 using EnsekEnergyManager.Infrastructure.Persistence.Context;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
+using EnsekEnergyManager.Infrastructure.Persistence.Init;
+using Microsoft.EntityFrameworkCore;
+using CsvHelper;
+using Microsoft.SqlServer.Server;
+using System.Globalization;
 
 namespace EnsekEnergyManager.Infrastructure.Seeders
 {
     public class MeterReadingObject
     {
         public Guid Id { get; set; }
-        public Account? Account { get; set; }
+        public int AccountId { get; set; }
         public DateTime? MeterReadingDateTime { get; set; }
         public string? MeterReadValue { get; set; } = string.Empty;
     }
 
-    internal class MeterSeeder
+    internal class MeterSeeder : ICustomSeeder
     {
         private readonly ApplicationDbContext _db;
         private readonly ILogger<MeterSeeder> _logger;
@@ -33,28 +38,72 @@ namespace EnsekEnergyManager.Infrastructure.Seeders
 
         public async Task InitializeAsync(CancellationToken cancellationToken)
         {
-            string? authorPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            ApplicationDbContext _db = new ApplicationDbContext();
+            string filePath = $"C:/Users/Dan/source/repos/Spookems/EnsekEnergyManager/EnsekEnergyManager.Infrastructure/Seeders/Csv/Meter_Reading.csv"; // Path to your CSV file
+            List<MeterReading> meterReadings = await ParseMeterReadingsAsync(filePath);
 
-            string authorsData = await File.ReadAllTextAsync(authorPath + "/Seeders/authors.json", cancellationToken); // needs changing for csv
+            if (meterReadings.Count > 0)
+            {
+                _logger.LogInformation("Seeding meter readings.");
+                await _db.MeterReadings.AddRangeAsync(meterReadings, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+                _logger.LogInformation("Seeded meter readings.");
+            }
+        }
 
-            //if (authors != null)
-            //{
-            //    Microsoft.EntityFrameworkCore.DbSet<MeterReading> existingType = _db.MeterReadings;
-            //    //IEnumerable<MeterReading> missing = authors.Where(lt => !existingType.Any(l => l.MeterReadValue != null && l.MeterReadValue == lt.MeterReadValue));
+        public async Task<List<MeterReading>> ParseMeterReadingsAsync(string filePath)
+        {
+            ApplicationDbContext _db = new ApplicationDbContext();
+            List<MeterReading> meterReadings = new List<MeterReading>();
 
-            //    //if (missing.Any())
-            //    //{
-            //        _logger.LogInformation("Started to Seed Authors.");
-            //        foreach (MeterReadingObject author in authors)
-            //        {
-            //            MeterReading newAuthor = new MeterReading(author.MeterReadValue, null, null);
-            //            await _db.MeterReadings.AddAsync(newAuthor, cancellationToken);
-            //        }
+            using (var reader = new StreamReader(filePath))
+            {
+                reader.ReadLine();
+                while (!reader.EndOfStream)
+                {
+                    var line = reader.ReadLine();
+                    var values = line.Split(',');
 
-            //        await _db.SaveChangesAsync(cancellationToken);
-            //        _logger.LogInformation("Seeded Authors.");
-            //    //}
-            //}
+                    // Assuming the CSV columns are in the order: AccountId, MeterReadingDateTime, MeterReadValue
+                    if (values.Length >= 3)
+                    {
+                        int accountId;
+                        if (int.TryParse(values[0], out accountId))
+                        {
+                            var associatedAccount = await _db.Accounts.Where(x => x.AccountId == accountId).FirstOrDefaultAsync();
+
+                            CultureInfo provider = CultureInfo.InvariantCulture;
+                            DateTime meterReadingDateTime = DateTime.ParseExact(values[1], "M/d/yy H:mm", System.Globalization.CultureInfo.InvariantCulture);
+
+                            if (associatedAccount != null)
+                            {
+                                string meterReadValue = values[2];
+
+                                MeterReading meterReading = new MeterReading
+                                {
+                                    AccountId = accountId,
+                                    MeterReadingDateTime = meterReadingDateTime,
+                                    MeterReadValue = meterReadValue
+                                };
+
+                                meterReadings.Add(meterReading);
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("Invalid AccountId format.");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid line format: " + line);
+                    }
+                }
+            }
+
+
+
+            return meterReadings;
         }
     }
 }
