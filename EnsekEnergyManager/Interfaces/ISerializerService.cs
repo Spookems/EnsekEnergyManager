@@ -1,4 +1,4 @@
-namespace MovieApi.Application.Common.Interfaces;
+namespace EnsekEnergyManager.Interfaces;
 
 public interface ISerializerService : ITransientService
 {

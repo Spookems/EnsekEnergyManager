@@ -60,11 +60,11 @@ namespace EnsekEnergyManager.Test
         #region Account Tests
 
         [Test]
-        public async Task SeedAccountsAsyncShouldSeedNewAccountsWhenMoviesAreMissing()
+        public async Task SeedAccountsAsyncShouldSeedNewAccountsWhenAccountsAreMissing()
         {
             // Arrange
-            var cancellationToken = CancellationToken.None;
-            var movies = new List<AccountSeeder.AccountObject>
+            CancellationToken cancellationToken = CancellationToken.None;
+            List<AccountSeeder.AccountObject> accounts = new List<AccountSeeder.AccountObject>
             {
                 new AccountSeeder.AccountObject { AccountId = 1, FirstName = "John", LastName = "Doe" },
             };
@@ -73,18 +73,18 @@ namespace EnsekEnergyManager.Test
             _dbContextMock.Setup(m => m.Set<Account>()).Returns(_mockAccounts.Object);
 
             // Act
-            List<Account> addedAccounts = await _seeder.SeedAccountsAsync(movies, cancellationToken);
+            List<Account> addedAccounts = await _seeder.SeedAccountsAsync(accounts, cancellationToken, _dbContextMock.Object);
 
             // Assert
             Assert.That(addedAccounts.Count == 0);
         }
 
         [Test]
-        public async Task SeedAccountsAsyncShouldNotSeedNewAccountsWhenMoviesAreAlreadyPresent()
+        public async Task SeedAccountsAsyncShouldNotSeedNewAccountsWhenAccountsAreAlreadyPresent()
         {
             // Arrange
             var cancellationToken = CancellationToken.None;
-            var movies = new List<AccountSeeder.AccountObject>
+            var accountObjects = new List<AccountSeeder.AccountObject>
             {
                 new AccountSeeder.AccountObject { AccountId = 1, FirstName = "John", LastName = "Doe" },
                 new AccountSeeder.AccountObject { AccountId = 2, FirstName = "Jane", LastName = "Doe" },
@@ -95,7 +95,7 @@ namespace EnsekEnergyManager.Test
             _dbContextMock.Setup(m => m.Set<Account>()).Returns(_mockAccounts.Object);
 
             // Act
-            List<Account> addedAccounts = await _seeder.SeedAccountsAsync(movies, cancellationToken);
+            List<Account> addedAccounts = await _seeder.SeedAccountsAsync(accountObjects, cancellationToken, _dbContextMock.Object);
 
 
             // Assert
@@ -104,17 +104,17 @@ namespace EnsekEnergyManager.Test
         }
 
         [Test]
-        public async Task SeedAccountsAsyncShouldReturnEmptyListWhenMoviesAreEmpty()
+        public async Task SeedAccountsAsyncShouldReturnEmptyListWhenAccountsAreEmpty()
         {
             // Arrange
             var cancellationToken = CancellationToken.None;
-            var movies = new List<AccountSeeder.AccountObject>();
+            List<AccountSeeder.AccountObject> movies = new List<AccountSeeder.AccountObject>();
 
             _dbContextMock.Setup(m => m.Set<Account>()).Returns(_mockAccounts.Object);
 
 
             // Act
-            var result = await _seeder.SeedAccountsAsync(movies, cancellationToken);
+            var result = await _seeder.SeedAccountsAsync(movies, cancellationToken, _dbContextMock.Object);
 
             // Assert
             Assert.That(result.Count, Is.EqualTo(0)); // No accounts should be added

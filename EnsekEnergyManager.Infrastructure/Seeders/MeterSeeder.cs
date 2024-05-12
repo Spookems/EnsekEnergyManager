@@ -53,6 +53,11 @@ namespace EnsekEnergyManager.Infrastructure.Seeders
 
         public async Task<List<MeterReading>> ParseMeterReadingsAsync(string filePath)
         {
+
+            if (_db == null)
+            {
+                ApplicationDbContext _db = new();
+            }
             List<MeterReading> meterReadings = new List<MeterReading>();
             if (File.Exists(filePath))
             {
@@ -60,7 +65,7 @@ namespace EnsekEnergyManager.Infrastructure.Seeders
                 if (new FileInfo(filePath).Length > 0)
                 {
                     using (var reader = new StreamReader(filePath))
-            {
+                    {
                         reader.ReadLine();
                         while (!reader.EndOfStream)
                         {
@@ -103,16 +108,12 @@ namespace EnsekEnergyManager.Infrastructure.Seeders
                             }
                         }
                     }
-                    
-                    
                 }
-
                 else
                 {
                     _logger.LogInformation("File is empty: " + filePath);
                 }
             }
-
             else
             {
                 _logger.LogInformation("File does not exist: " + filePath);

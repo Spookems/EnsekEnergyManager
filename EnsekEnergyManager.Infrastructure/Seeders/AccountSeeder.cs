@@ -37,11 +37,11 @@ namespace EnsekEnergyManager.Infrastructure.Seeders
             _db = db;
         }
 
-        private async Task<List<AccountObject>> LoadAccountsFromCsvAsync(string moviePath, CancellationToken cancellationToken)
+        private async Task<List<AccountObject>> LoadAccountsFromCsvAsync(string csvPath, CancellationToken cancellationToken)
         {
             CsvMapperHelper csvMappingHelper = new CsvMapperHelper(_logger);
 
-            List<AccountObject> accounts = await GetMoviesFromCsvAsync($"C:/Users/Dan/source/repos/Spookems/EnsekEnergyManager/EnsekEnergyManager.Infrastructure/Seeders/Csv/Test_Accounts.csv", cancellationToken);
+            List<AccountObject> accounts = await GetRecordsFromCSVAsync($"C:/Users/Dan/source/repos/Spookems/EnsekEnergyManager/EnsekEnergyManager.Infrastructure/Seeders/Csv/Test_Accounts.csv", cancellationToken);
             return accounts;
         }
 
@@ -69,7 +69,7 @@ namespace EnsekEnergyManager.Infrastructure.Seeders
             return accounts;
         }
 
-        public async Task<List<AccountObject>> GetMoviesFromCsvAsync(string filePath, CancellationToken cancellationToken)
+        public async Task<List<AccountObject>> GetRecordsFromCSVAsync(string filePath, CancellationToken cancellationToken)
         {
             try
             {
@@ -108,26 +108,27 @@ namespace EnsekEnergyManager.Infrastructure.Seeders
 
         public async Task InitializeAsync(CancellationToken cancellationToken)
         {
-            string? moviePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (moviePath == null)
+            string? csvPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            if (csvPath == null)
             {
                 _logger.LogError("Failed to get movie path.");
                 return;
             }
 
-            List<AccountObject> movies = await LoadAccountsFromCsvAsync(moviePath, cancellationToken);
-            if (movies.Count == 0)
+            List<AccountObject> accounts = await LoadAccountsFromCsvAsync(csvPath, cancellationToken);
+            if (accounts.Count == 0)
             {
                 _logger.LogWarning("No movies found to process.");
                 return;
             }
-
-            List<Account> addedAccounts = await SeedAccountsAsync(movies, cancellationToken);
+            ApplicationDbContext _db = new();
+            List<Account> addedAccounts = await SeedAccountsAsync(accounts, cancellationToken, _db);
             _logger.LogInformation($"Accounts Added { addedAccounts?.Count }.");
         }
 
-        public async Task<List<Account>> SeedAccountsAsync(IEnumerable<AccountObject> movies, CancellationToken cancellationToken)
+        public async Task<List<Account>> SeedAccountsAsync(IEnumerable<AccountObject> movies, CancellationToken cancellationToken, ApplicationDbContext _db)
         {
+            
             List<Account> missingAccountsToUpdate = [];
             HashSet<int> existingTitles = _db.Accounts.Where(x => x.AccountId != null).Select(x => x.AccountId).ToHashSet();
             IEnumerable<AccountObject> missingMovies = movies.Where(m => !existingTitles.Contains(m.AccountId));

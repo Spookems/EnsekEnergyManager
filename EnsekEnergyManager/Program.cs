@@ -1,5 +1,7 @@
+using EnsekEnergyManager;
 using EnsekEnergyManager.Infrastructure;
 using EnsekEnergyManager.Infrastructure.Persistence.Context;
+using EnsekEnergyManager.Infrastructure.Persistence.Init;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
