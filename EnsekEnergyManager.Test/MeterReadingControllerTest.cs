@@ -1,89 +1,64 @@
-﻿using NUnit.Framework;
-using Moq;
+﻿using Moq;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-using System.Threading;
-using System;
-using System.Linq;
-using Microsoft.EntityFrameworkCore;
-using CsvHelper;
-using System.Globalization;
-using System.Collections.Generic;
 using EnsekEnergyManager.Infrastructure.Persistence.Context;
-using EnsekEnergyManager.Classes;
 using EnsekEnergyManager.Controllers;
+using EnsekEnergyManager.Infrastructure.Persistence.Init;
+using Microsoft.Extensions.Logging;
 
 
 namespace EnsekEnergyManager.Test
 {
-
     [TestFixture]
     public class MeterReadingControllerTests
     {
-        [Test]
-        public async Task UploadMeterReadings_ValidCsv_ReturnsOk()
+        [TestFixture]
+        public class AccountControllerTests
         {
-            // Arrange
-            var file = CreateFormFile("1,2024-05-12T10:00:00,100\n2,2024-05-12T11:00:00,200");
+            private Mock<CustomSeederRunner> _seederMock;
+            private Mock<ApplicationDbContext> _dbContextMock;
+            private Mock<ILogger<AccountController>> _loggerMock;
+            private AccountController _controller;
 
-            var mockDb = new Mock<ApplicationDbContext>();
-            mockDb.Setup(db => db.Accounts).Returns(Mock.Of<DbSet<Account>>(_ => _.Provider == Enumerable.Empty<Account>().AsQueryable().Provider && _.Expression == Enumerable.Empty<Account>().AsQueryable().Expression));
+            [SetUp]
+            public void Setup()
+            {
+                _seederMock = new Mock<CustomSeederRunner>();
+                _dbContextMock = new Mock<ApplicationDbContext>();
+                _loggerMock = new Mock<ILogger<AccountController>>();
 
-            var controller = new AccountController(mockDb.Object);
-            var cancellationToken = new CancellationToken();
+                _controller = new AccountController(_seederMock.Object, _dbContextMock.Object, _loggerMock.Object);
+            }
 
-            // Act
-            var result = await controller.UploadMeterReadings(file, cancellationToken);
+            [Test]
+            public async Task UploadMeterReadingsShouldReturnBadRequestIfFileExtensionIsNotCSV()
+            {
+                // Arrange
+                var fileMock = new Mock<IFormFile>();
+                fileMock.Setup(f => f.FileName).Returns("test.txt"); // Set file extension to .txt
 
-            // Assert
-            var okResult = Assert.IsInstanceOf<OkObjectResult>(result);
-            var message = Assert.IsInstanceOf<string>(okResult.Value);
-            Assert.That(message.Contains("Successfully processed"));
+                // Act
+                var result = await _controller.UploadMeterReadings(fileMock.Object, CancellationToken.None) as BadRequestObjectResult;
+
+                // Assert
+                Assert.IsNotNull(result);
+                Assert.AreEqual(400, result.StatusCode);
+            }
+
+            [Test]
+            public async Task UploadMeterReadingsShouldReturnBadRequestIfFileExtensionIsNull()
+            {
+                // Arrange
+                var fileMock = new Mock<IFormFile>();
+                fileMock.Setup(f => f.FileName).Returns("test"); // Set file extension to null
+
+                // Act
+                var result = await _controller.UploadMeterReadings(fileMock.Object, CancellationToken.None) as BadRequestObjectResult;
+
+                // Assert
+                Assert.IsNotNull(result);
+                Assert.AreEqual(400, result.StatusCode);
+            }
         }
-
-        [Test]
-        public async Task UploadMeterReadings_InvalidExtension_ReturnsBadRequest()
-        {
-            // Arrange
-            var file = CreateFormFile("1,2024-05-12T10:00:00,100\n2,2024-05-12T11:00:00,200", "test.txt");
-
-            var controller = new AccountController(Mock.Of<ApplicationDbContext>());
-            var cancellationToken = new CancellationToken();
-
-            // Act
-            var result = await controller.UploadMeterReadings(file, cancellationToken);
-
-            // Assert
-            Assert.IsInstanceOf<BadRequestObjectResult>(result);
-        }
-
-        // Helper method to create a form file with specified content and name
-        private static IFormFile CreateFormFile(string content, string fileName = "test.csv")
-        {
-            var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(content));
-            return new FormFile(memoryStream, 0, memoryStream.Length, "file", fileName);
-        }
-    }
-
-
-    private static IFormFile CreateFormFile(string content, string fileName)
-    {
-        var stream = new MemoryStream(Encoding.UTF8.GetBytes(content));
-        return new FormFile(stream, 0, stream.Length, "file", fileName);
-    }
-
-    private static DbSet<Account> CreateMockDbSet(List<Account> data)
-    {
-        var queryableData = data.AsQueryable();
-        var mockSet = new Mock<DbSet<Account>>();
-        mockSet.As<IAsyncEnumerable<Account>>().Setup(m => m.GetEnumerator()).Returns(new TestAsyncEnumerator<Account>(queryableData.GetEnumerator()));
-        mockSet.As<IQueryable<Account>>().Setup(m => m.Provider).Returns(new TestAsyncQueryProvider<Account>(queryableData.Provider));
-        mockSet.As<IQueryable<Account>>().Setup(m => m.Expression).Returns(queryableData.Expression);
-        mockSet.As<IQueryable<Account>>().Setup(m => m.ElementType).Returns(queryableData.ElementType);
-        mockSet.As<IQueryable<Account>>().Setup(m => m.GetEnumerator()).Returns(() => queryableData.GetEnumerator());
-        return mockSet.Object;
     }
 }

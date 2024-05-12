@@ -38,7 +38,7 @@ namespace EnsekEnergyManager.Controllers
         {
             string fileExtension = Path.GetExtension(file.FileName);
 
-            if (!string.IsNullOrEmpty(fileExtension) || fileExtension != ".csv") 
+            if (!string.IsNullOrEmpty(fileExtension) && fileExtension == ".csv") 
             {
                 List<MeterReading> ValidRecords = new List<MeterReading>();
                 List<MeterReading> InValidRecords = new List<MeterReading>();

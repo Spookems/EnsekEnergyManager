@@ -6,6 +6,10 @@ namespace EnsekEnergyManager.Infrastructure.Persistence.Init
     {
         private readonly ICustomSeeder[] _seeders;
 
+        public CustomSeederRunner()
+        {
+        }
+
         public CustomSeederRunner(IServiceProvider serviceProvider) =>
         _seeders = serviceProvider.GetServices<ICustomSeeder>().ToArray();
 

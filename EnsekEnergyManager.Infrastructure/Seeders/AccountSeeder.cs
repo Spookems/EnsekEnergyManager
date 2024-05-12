@@ -122,18 +122,18 @@ namespace EnsekEnergyManager.Infrastructure.Seeders
                 return;
             }
 
-            await SeedAccountsAsync(movies, cancellationToken);
+            List<Account> addedAccounts = await SeedAccountsAsync(movies, cancellationToken);
+            _logger.LogInformation($"Accounts Added { addedAccounts?.Count }.");
         }
-        private async Task SeedAccountsAsync(IEnumerable<AccountObject> movies, CancellationToken cancellationToken)
-        {
 
+        public async Task<List<Account>> SeedAccountsAsync(IEnumerable<AccountObject> movies, CancellationToken cancellationToken)
+        {
+            List<Account> missingAccountsToUpdate = [];
             HashSet<int> existingTitles = _db.Accounts.Where(x => x.AccountId != null).Select(x => x.AccountId).ToHashSet();
             IEnumerable<AccountObject> missingMovies = movies.Where(m => !existingTitles.Contains(m.AccountId));
 
             if (missingMovies.Any())
             {
-                List<Account> missingAccountsToUpdate = [];
-
                 _logger.LogInformation("Started to Seed movies.");
                 foreach (AccountObject AccountObj in missingMovies)
                 {
@@ -148,8 +148,10 @@ namespace EnsekEnergyManager.Infrastructure.Seeders
                     await _db.Accounts.AddRangeAsync(missingAccountsToUpdate, cancellationToken);
                     await _db.SaveChangesAsync(cancellationToken);
                     _logger.LogInformation("Seeded accounts.");
-                }
+                } 
             }
+
+            return missingAccountsToUpdate;
         }
     }
 }

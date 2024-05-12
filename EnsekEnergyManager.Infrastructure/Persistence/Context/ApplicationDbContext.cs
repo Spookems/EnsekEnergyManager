@@ -19,6 +19,10 @@ namespace EnsekEnergyManager.Infrastructure.Persistence.Context
             _configuration = configuration;
         }
 
+        public ApplicationDbContext()
+        {
+        }
+
         public DbSet<Account> Accounts => Set<Account>();
         public DbSet<MeterReading> MeterReadings => Set<MeterReading>();
 
