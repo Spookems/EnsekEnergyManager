@@ -1,5 +1,7 @@
-﻿using EnsekEnergyManager.Infrastructure.Persistence.Init;
+﻿using EnsekEnergyManager.Infrastructure.Persistence.Context;
+using EnsekEnergyManager.Infrastructure.Persistence.Init;
 using Infrastructure.Persistence.Init;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MovieApi.Application.Common.Interfaces;
@@ -17,49 +19,14 @@ namespace EnsekEnergyManager.Infrastructure
         internal static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration config)
         {
             return services
-                .AddServices(typeof(ICustomSeeder), ServiceLifetime.Transient)
-            .AddTransient<IDatabaseInitializer, DatabaseInitialiser>()
-
             .AddTransient<CustomSeederRunner>();
         }
 
-
-        internal static IServiceCollection AddServices(this IServiceCollection services) =>
-        services
-            .AddServices(typeof(ITransientService), ServiceLifetime.Transient)
-            .AddServices(typeof(IScopedService), ServiceLifetime.Scoped);
-
-        internal static IServiceCollection AddServices(this IServiceCollection services, Type interfaceType, ServiceLifetime lifetime)
+        internal static IServiceCollection ConfigureServices(IServiceCollection services, IConfiguration config)
         {
-            var interfaceTypes =
-                AppDomain.CurrentDomain.GetAssemblies()
-                    .SelectMany(s => s.GetTypes())
-                    .Where(t => interfaceType.IsAssignableFrom(t)
-                                && t.IsClass && !t.IsAbstract)
-                    .Select(t => new
-                    {
-                        Service = t.GetInterfaces().FirstOrDefault(),
-                        Implementation = t
-                    })
-                    .Where(t => t.Service is not null
-                                && interfaceType.IsAssignableFrom(t.Service));
-
-            foreach (var type in interfaceTypes)
-            {
-                services.AddService(type.Service!, type.Implementation, lifetime);
-            }
-
-            return services;
+            // Configure DbContext with connection string
+            return services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(config.GetConnectionString("DefaultConnectionString")));
         }
-
-        internal static IServiceCollection AddService(this IServiceCollection services, Type serviceType, Type implementationType, ServiceLifetime lifetime) =>
-            lifetime switch
-            {
-                ServiceLifetime.Transient => services.AddTransient(serviceType, implementationType),
-                ServiceLifetime.Scoped => services.AddScoped(serviceType, implementationType),
-                ServiceLifetime.Singleton => services.AddSingleton(serviceType, implementationType),
-                _ => throw new ArgumentException("Invalid lifeTime", nameof(lifetime))
-            };
-
     }
 }

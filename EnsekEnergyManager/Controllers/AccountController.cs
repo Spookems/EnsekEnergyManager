@@ -3,6 +3,7 @@ using EnsekEnergyManager.Classes;
 using EnsekEnergyManager.Infrastructure.Mapping;
 using EnsekEnergyManager.Infrastructure.Persistence.Context;
 using EnsekEnergyManager.Infrastructure.Persistence.Init;
+using EnsekEnergyManager.Infrastructure.Seeders;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Formats.Asn1;
@@ -35,126 +36,56 @@ namespace EnsekEnergyManager.Controllers
         [HttpPost("meter-reading-uploads")]
         public async Task<IActionResult> UploadMeterReadings(IFormFile file, CancellationToken cancellationToken)
         {
-            List<MeterReading> ValidRecords = new List<MeterReading>();
-            List<MeterReading> InValidRecords = new List<MeterReading>();
+            string fileExtension = Path.GetExtension(file.FileName);
 
-            ApplicationDbContext _db = new ApplicationDbContext();
-
-
-            using (var stream = new StreamReader(file.OpenReadStream()))
+            if (!string.IsNullOrEmpty(fileExtension) || fileExtension != ".csv") 
             {
-                var csvReader = new CsvReader(stream, CultureInfo.InvariantCulture);
-                csvReader.Context.RegisterClassMap<MeterReadingMap>();
+                List<MeterReading> ValidRecords = new List<MeterReading>();
+                List<MeterReading> InValidRecords = new List<MeterReading>();
 
-                try
+                using (StreamReader stream = new StreamReader(file.OpenReadStream()))
                 {
-                    var records = csvReader.GetRecords<MeterReading>().ToList();
-                    List<Account> accounts = await _db.Accounts.ToListAsync();
+                    CsvReader csvReader = new CsvReader(stream, CultureInfo.InvariantCulture);
+                    csvReader.Context.RegisterClassMap<MeterReadingMap>();
 
-                    foreach (var record in records)
+                    try
                     {
-                        if (accounts.Any(x => x.AccountId == record.AccountId))
+                        List<MeterReading> records = csvReader.GetRecords<MeterReading>().ToList();
+                        List<Account> accounts = await _db.Accounts.ToListAsync();
+
+                        foreach (var record in records)
                         {
-                            record.Id = Guid.NewGuid();
-                            ValidRecords.Add(record);
-                        }
-                        else
-                        {
-                            InValidRecords.Add(record);
+                            if (accounts.Any(x => x.AccountId == record.AccountId))
+                            {
+                                record.Id = Guid.NewGuid();
+                                ValidRecords.Add(new MeterReading()
+                                {
+                                    AccountId = record.AccountId,
+                                    MeterReadingDateTime = record.MeterReadingDateTime,
+                                    MeterReadValue = record.MeterReadValue
+                                });
+                            }
+                            else
+                            {
+                                InValidRecords.Add(record);
+                            }
                         }
 
-                        _db.MeterReadings.Add(record);
+                        await _db.MeterReadings.AddRangeAsync(ValidRecords, cancellationToken);
+                        await _db.SaveChangesAsync(cancellationToken);
+
+                        return Ok($"Successfully processed {records.Count} meter readings. \n" +
+                            $"Valid Records Found: {ValidRecords?.Count} \n" +
+                            $"Invalid Records Found: {InValidRecords?.Count}");
                     }
-
-
-                    _logger.LogInformation($"Valid Records Found: {ValidRecords?.Count}");
-                    _logger.LogInformation($"Invalid Records Found: {InValidRecords?.Count}");
-                    _logger.LogInformation($"Begining Upsert");
-
-                    for (int i = 0; i < ValidRecords?.Count; i++)
+                    catch (Exception ex)
                     {
-                        MeterReading? record = ValidRecords[i];
-                        _db.MeterReadings.Add(record);
+                        return BadRequest($"Error processing file: {ex.Message}");
                     }
-
-                    await _db.MeterReadings.AddRangeAsync(ValidRecords, cancellationToken);
-                    await _db.SaveChangesAsync(cancellationToken);
-
-                    return Ok($"Successfully processed {records.Count} meter readings.");
-                }
-                catch (Exception ex)
-                {
-                    return BadRequest($"Error processing file: {ex.Message}");
                 }
             }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
-            if (file == null || file.Length <= 0)
-                return BadRequest("File is empty.");
-
-            using (var reader = new StreamReader(file.OpenReadStream()))
-            {
-                using (var csv = new CsvReader(reader, System.Globalization.CultureInfo.InvariantCulture))
-                {
-                    // Assuming your CSV has headers
-                    csv.Context.Configuration.HasHeaderRecord = true;
-                    csv.Context.RegisterClassMap<MeterReadingMap>(); // Register the mapping
-
-                    //csv.ReadHeader();
-                    //var csvHeaders = csv.HeaderRecord;
-
-                    //var hasHeaderRecord = csvHeaders.Intersect(_ColumnNames).Count() == csvHeaders.Count();
-
-
-                    var records = csv.GetRecords<MeterReading>().ToList();
-
-                    List<Account> accounts = await _db.Accounts.ToListAsync();
-
-                    foreach (var record in records)
-                    {
-                        if(accounts.Any(x => x.AccountId == record.AccountId))
-                        {
-                            record.Id = Guid.NewGuid();
-                            ValidRecords.Add(record);
-                        }
-                        else
-                        {
-                            InValidRecords.Add(record);
-                        }
-                        
-                        _db.MeterReadings.Add(record);
-                    }
-
-
-                    _logger.LogInformation($"Valid Records Found: {ValidRecords?.Count}");
-                    _logger.LogInformation($"Invalid Records Found: {InValidRecords?.Count}");
-                    _logger.LogInformation($"Begining Upsert");
-
-                    for (int i = 0; i < ValidRecords?.Count; i++) 
-                    {
-                        MeterReading? record = ValidRecords[i];
-                        _db.MeterReadings.Add(record);
-                    }
-
-                    await _db.MeterReadings.AddRangeAsync(ValidRecords, cancellationToken);
-                    await _db.SaveChangesAsync(cancellationToken);
-                }
-            }
-
-            return Ok("Meter readings uploaded successfully.");
+            return BadRequest($"Error processing file: Expected a csv, recieved: {fileExtension ?? "empty extension"}");
         }
     }
 }

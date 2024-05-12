@@ -126,7 +126,6 @@ namespace EnsekEnergyManager.Infrastructure.Seeders
         }
         private async Task SeedAccountsAsync(IEnumerable<AccountObject> movies, CancellationToken cancellationToken)
         {
-            ApplicationDbContext _db = new ApplicationDbContext();
 
             HashSet<int> existingTitles = _db.Accounts.Where(x => x.AccountId != null).Select(x => x.AccountId).ToHashSet();
             IEnumerable<AccountObject> missingMovies = movies.Where(m => !existingTitles.Contains(m.AccountId));

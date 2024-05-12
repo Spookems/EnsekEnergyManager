@@ -21,6 +21,7 @@ namespace EnsekEnergyManager.Infrastructure.Persistence.Context
                 .Build();
 
             ConnectionString = "Data Source=Main-01\\ENTEKSERVER;Initial Catalog=ENSEKDB;Integrated Security=True;Trust Server Certificate=True";
+            
             // ConnectionString = configuration.GetSection("Database").GetValue<string>("ConnectionString");
         }
 

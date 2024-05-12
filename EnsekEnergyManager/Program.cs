@@ -1,6 +1,7 @@
 using EnsekEnergyManager.Infrastructure;
 using EnsekEnergyManager.Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,15 +9,32 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
+ static void Main(string[] args)
+{
+    var host = CreateHostBuilder(args).Build();
+    host.Run();
+}
+
+ static IHostBuilder CreateHostBuilder(string[] args) =>
+    Host.CreateDefaultBuilder(args)
+        .ConfigureAppConfiguration((hostingContext, config) =>
+        {
+            config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+            config.AddJsonFile($"appsettings.{hostingContext.HostingEnvironment.EnvironmentName}.json", optional: true, reloadOnChange: true);
+            config.AddEnvironmentVariables();
+        });
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    options.UseSqlServer("Data Source=Main-01\\ENTEKSERVER;Initial Catalog=ENSEKDB;Integrated Security=True;Encrypt=True;Trust Server Certificate=True");
+    //options.UseSqlServer("Data Source=Main-01\\ENTEKSERVER;Initial Catalog=ENSEKDB;Integrated Security=True;Encrypt=True;Trust Server Certificate=True");
 });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddPersistence(builder.Configuration);
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnectionString")));
 builder.Services.AddTransient<IDatabaseConfig, DatabaseConfig>();
 
 

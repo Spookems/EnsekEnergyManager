@@ -1,5 +1,6 @@
 ﻿using EnsekEnergyManager.Classes;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -12,12 +13,10 @@ namespace EnsekEnergyManager.Infrastructure.Persistence.Context
 {
     public class ApplicationDbContext : DbContext
     {
-        public ApplicationDbContext()
+        private readonly IConfiguration _configuration;
+        public ApplicationDbContext(DbContextOptions options, IConfiguration configuration) : base(options)
         {
-
-        }
-        public ApplicationDbContext(DbContextOptions options) : base(options)
-        {
+            _configuration = configuration;
         }
 
         public DbSet<Account> Accounts => Set<Account>();
@@ -26,15 +25,16 @@ namespace EnsekEnergyManager.Infrastructure.Persistence.Context
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-             // modelBuilder.HasDefaultSchema(SchemaNames.Catalog);
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
 
-            optionsBuilder.UseSqlServer("Data Source=Main-01\\ENTEKSERVER;Initial Catalog=ENSEKDB;Integrated Security=True;Encrypt=True;Trust Server Certificate=True");
+            string connectionString = _configuration.GetConnectionString("DefaultConnection");
+
+
+           optionsBuilder.UseSqlServer("Data Source=Main-01\\ENTEKSERVER;Initial Catalog=ENSEKDB;Integrated Security=True;Encrypt=True;Trust Server Certificate=True");
         }
     }
 }

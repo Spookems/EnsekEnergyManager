@@ -38,7 +38,6 @@ namespace EnsekEnergyManager.Infrastructure.Seeders
 
         public async Task InitializeAsync(CancellationToken cancellationToken)
         {
-            ApplicationDbContext _db = new ApplicationDbContext();
             string filePath = $"C:/Users/Dan/source/repos/Spookems/EnsekEnergyManager/EnsekEnergyManager.Infrastructure/Seeders/Csv/Meter_Reading.csv"; // Path to your CSV file
             List<MeterReading> meterReadings = await ParseMeterReadingsAsync(filePath);
 
@@ -53,7 +52,6 @@ namespace EnsekEnergyManager.Infrastructure.Seeders
 
         public async Task<List<MeterReading>> ParseMeterReadingsAsync(string filePath)
         {
-            ApplicationDbContext _db = new ApplicationDbContext();
             List<MeterReading> meterReadings = new List<MeterReading>();
 
             using (var reader = new StreamReader(filePath))
